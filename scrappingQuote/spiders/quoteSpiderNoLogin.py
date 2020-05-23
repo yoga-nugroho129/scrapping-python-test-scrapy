@@ -2,17 +2,15 @@
 import scrapy
 # 5.2) import items container class from items.py
 from ..items import ScrappingquoteItem
-# 11.1) import formRequest
-from scrapy.http import FormRequest
 
 # 2) create class that inherite 'spider' from scrapy
 class QuoteSpider(scrapy.Spider):
   # 2.1) SPIDER NAME
-  name = 'quotes' 
+  name = 'quotesNoLogin' 
   # 10.1) create pageNumber for url parameter
   pageNumber = 2
   start_urls = [ # 2.2) set the url to be scrape
-    'http://quotes.toscrape.com/login' # 11.4) change url to login page
+    'http://quotes.toscrape.com/page/1/'
   ]
 
   # 3) create 'parse' method 
@@ -24,20 +22,8 @@ class QuoteSpider(scrapy.Spider):
   #   # 3+) run spider by cd to scrappingQuote & run 'scrapy crawl spiderName'
   # == END OF EXAMPLE ==
 
-  # 11) using scrapy formrequest to login using scrapy
   # 4) extract data from the url using the example of step 3
   def parse(self, response):
-    # 11.2) Inside parse we must get the data for login first => token
-    token = response.css("form input::attr(value)").extract_first()
-    # 11.3) make a return from FormRequest with 3 params
-    return FormRequest.from_response(response, formdata={
-      'csrf_token' : token,
-      'username' : 'random@gmail.com',
-      'password' : 'randompassword'
-    }, callback = self.startScrapping)
-
-  # 11.5) create startScrapping method/function
-  def startScrapping(self, response):
     # 5.3) Instantiate imported items
     items = ScrappingquoteItem()
 
@@ -94,5 +80,4 @@ class QuoteSpider(scrapy.Spider):
       # 10.4) yield the to the next page using 'follow' method from scrapy
       QuoteSpider.pageNumber += 1
       # after hit the next page, run the callback of 'parse' method again to scrap the data inside the next page (recursive like)
-      yield response.follow(nextPage, callback = self.startScrapping)
-    # 11.6) move all the scrapping function here
+      yield response.follow(nextPage, callback = self.parse)
